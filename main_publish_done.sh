@@ -13,7 +13,7 @@ exec > "$LOGS_FOLDER/scripts/main_publish_done.log" 2>&1
 parse_argv "$@"
 
 # Stop pushing main stream.
-# In case stopping avconv/ffmpeg needs some time, use a loop.
+# In case stopping gst/avconv/ffmpeg needs some time, use a loop.
 # Otherwise pushing backup may be denied with 'already publishing' error
 while is_running main; do
 	kill main

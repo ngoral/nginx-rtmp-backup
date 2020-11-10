@@ -4,9 +4,9 @@
 # with true it will change back, with false -- stay on backup stream
 MAIN_STREAM_PRIORITY="true"
 
-# [avconv|ffmpeg] defines which program will push your stream
-# use avconv if not sure
-RUNNER="avconv"
+# [gst|avconv|ffmpeg] defines which program will push your stream
+# use ffmpeg if not sure
+RUNNER="gst"
 
 # nginx rtmp application name for main stream
 MAIN_STREAM_APPNAME="main"

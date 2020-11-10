@@ -1,7 +1,7 @@
 # NGINX-RTMP-BACKUP
 This is a set of shell scripts that allows you to implement elementary backups for your RTMP streams.
 ## Prerequisites
-You have to have [avconv](https://libav.org/avconv.html) (or [ffmpeg](https://www.ffmpeg.org/)) and [nginx](https://nginx.ru/en/) with [nginx-rtmp-module](https://github.com/arut/nginx-rtmp-module) installed on your machine.
+You have to have [gstreamer](https://gstreamer.freedesktop.org) ( or [avconv](https://libav.org/avconv.html) or [ffmpeg](https://www.ffmpeg.org/)) and [nginx](https://nginx.ru/en/) with [nginx-rtmp-module](https://github.com/sergey-dryabzhinsky/nginx-rtmp-module) installed on your machine.
 
 ## Installation
 1. Download files from this repo (or clone it locally);
@@ -26,8 +26,8 @@ Default is `out`.
 `true` or `false`. If set to `true`, the main stream will be pushed to out stream each time it recovers. If set to `false`, once the out stream switches to backup, it will stay there.
 Default is `true`.
 * `RUNNER`
-`avconv` or `ffmpeg`. Defines which program will push streams.
-Default is `avconv`.
+`gst` or `avconv` or `ffmpeg`. Defines which program will push streams.
+Default is `gst`.
 * `NGINX_USER`
 A username nginx workers runs under. Required for setting right permissions for logs and pids folders.
 Default is `nobody`.
@@ -56,14 +56,14 @@ Basically, you need to create three applications, one accepting the main stream,
             # Enable live streaming.
             live on;
 
-            # This will prevent avconv/ffmpeg from hanging when stream ends.
+            # This will prevent gst/avconv/ffmpeg from hanging when stream ends.
             # We will kill it from scripts anyway, but just in case.
             play_restart on;
 
+            # We need `out` app to have access from localhost.
+            allow play 127.0.0.1;
             # You may want this in case not to allow anyone to watch streams from this point.
             deny play all;
-            # However, we need `out` app to have access.
-            allow play 127.0.0.1;
 
             # That's where the magic starts.
             # Do not forget to change paths.
@@ -83,8 +83,8 @@ Basically, you need to create three applications, one accepting the main stream,
         application backup {
             live on;
             play_restart on;
-            deny play all;
             allow play 127.0.0.1;
+            deny play all;
 
             # When stream stops publishing,
             # call backup_publish_done.sh and pass a streamname to it.
@@ -102,9 +102,9 @@ For example, if you have specified the following names for nginx-rtmp apps:
 `BACKUP_STREAM_APPNAME="backup"`
 `OUT_STREAM_APPNAME="out"`,
 and then sent your streams to `rtmp://your.domain/main/test` and `rtmp://your.domain/backup/test`, you can watch the output stream at `rtmp://your.domain/out/test`.
-When switching between streams, you may see a slight delay, as avconv/ffmpeg needs time to run.
+When switching between streams, you may see a slight delay, as gst/avconv/ffmpeg needs time to run.
 ### Logs
 All logs are stored at `/var/log/nginx-rtmp/backup`.
-Logs for avconv/ffmpeg are stored under the names `main_$streamname.log` and `backup_$streamname.log`, where `$streamname` is the RTMP key you send your stream to.
+Logs for gst/avconv/ffmpeg are stored under the names `main_$streamname.log` and `backup_$streamname.log`, where `$streamname` is the RTMP key you send your stream to.
 Logs for scripts are stored in the subdirectory `scripts` named after the scripts themselves.
 

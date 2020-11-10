@@ -57,17 +57,31 @@ push_stream() { # Starts pushing stream
 
 	LOGFILE="$LOGS_FOLDER/${appname}_${STREAMNAME}.log"
 
-	assert_one_of RUNNER avconv ffmpeg
+	assert_one_of RUNNER gst avconv ffmpeg
 
-	nohup "$RUNNER" \
-		-re -i "rtmp://localhost/$appname/$STREAMNAME" \
-		-c copy -f flv \
-		"rtmp://localhost/$OUT_STREAM_APPNAME/$STREAMNAME" \
-		\
-		</dev/null \
-		>"$LOGFILE" \
-		2>&1 \
-		&
+	if [ "$RUNNER" = "gst" ]; then
+		nohup gst-launch-1.0 \
+			rtmpsrc location="rtmp://localhost/$appname/$STREAMNAME" do-timestamp=true ! queue ! flvdemux name=demux \
+			flvmux name=mux \
+			demux.video ! queue ! mux.video \
+			demux.audio ! queue ! mux.audio \
+			mux.src ! queue ! rtmpsink location="rtmp://localhost/$OUT_STREAM_APPNAME/$STREAMNAME" \
+			\
+			</dev/null \
+			>"$LOGFILE" \
+			2>&1 \
+			&
+	else
+		nohup "$RUNNER" \
+			-re -i "rtmp://localhost/$appname/$STREAMNAME" \
+			-c copy -f flv \
+			"rtmp://localhost/$OUT_STREAM_APPNAME/$STREAMNAME" \
+			\
+			</dev/null \
+			>"$LOGFILE" \
+			2>&1 \
+			&
+ 	fi
 
 	echo $! > "$(pid_for "$stream_kind")"
 }
